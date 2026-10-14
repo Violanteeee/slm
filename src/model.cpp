@@ -1,57 +1,94 @@
 #include "Model.h"
-#include <iostream>
 
-//constructor
+// Constructor
 Model::Model(int k, double alpha) {
     this->k = k;
     this->alpha = alpha;
+}
 
-};
-//analyze the text to get frequencies of k-grams and characters that come after
+// Analyze the text to get frequencies of k-grams
+// and the characters that follow them.
 void Model::train(const string& text) {
-    for (int i = 0; i < text.size() - k + 1; i++) {
+    // There must be at least k+1 characters to have
+    // a k-gram followed by a character.
+    if (text.size() <= static_cast<size_t>(k)) {
+        throw invalid_argument(
+            "Training text must contain more than k characters."
+        );
+    }
+
+    for (size_t i = 0; i + static_cast<size_t>(k) < text.size(); i++) {
         string kgram = text.substr(i, k);
         frequencies[kgram]++;
-        if (i + k < text.size()) {
-           char next = text[i+k];
-           transitions[kgram][next]++;
-        }
+
+        char next = text[i + k];
+        transitions[kgram][next]++;
     }
-    //alphabet generation 
-    for (int i = 0; i < text.size(); i++) {
-        char letter = text[i];
+
+    // Count the final k-gram too, even though it has no
+    // following character.
+    string last_kgram = text.substr(text.size() - k, k);
+    frequencies[last_kgram]++;
+
+    // Build the alphabet from the training text.
+    for (char letter : text) {
         alphabet.insert(letter);
-    }   
-    //test the logic print frequencies etc
-    for (const auto& entry : frequencies) {
-        cout << entry.first << ": " << entry.second << endl;
     }
 }
 
+// Calculate the probability of each possible next character.
 void Model::calcprob() {
     for (const auto& entry : frequencies) {
-        string kgram = entry.first;
+        const string& kgram = entry.first;
+
+        auto trans_it = transitions.find(kgram);
 
         int totalfreq = 0;
-        for (const auto& transition : transitions[kgram]) {
-            totalfreq += transition.second;
+        if (trans_it != transitions.end()) {
+            for (const auto& transition : trans_it->second) {
+                totalfreq += transition.second;
+            }
+        }
+
+        double denom = totalfreq + alpha * alphabet.size();
+
+        if (denom == 0) {
+            continue;
         }
 
         for (char c : alphabet) {
-            double num = transitions[kgram][c] + alpha;
-            double denom = totalfreq + alpha * alphabet.size();
-            double prob = num / denom;
-            if (denom == 0) {
-                continue;
-            }
-            probabilities[kgram][c] = prob;
-        }
+            int count = 0;
 
-        // TEST: print the probabilities for this k-gram
-        cout << "K-gram: " << kgram << endl;
-        for (const auto& entry : probabilities[kgram]) {
-            cout << "  " << entry.first << ": "
-                 << entry.second << endl;
+            if (trans_it != transitions.end()) {
+                auto char_it = trans_it->second.find(c);
+                if (char_it != trans_it->second.end()) {
+                    count = char_it->second;
+                }
+            }
+
+            double num = count + alpha;
+            probabilities[kgram][c] = num / denom;
         }
     }
+}
+
+int Model::get_k() const {
+    return k;
+}
+
+const map<string, int>& Model::get_frequencies() const {
+    return frequencies;
+}
+
+const map<string, map<char, double>>&
+Model::get_probabilities() const {
+    return probabilities;
+}
+
+double Model::get_alpha() const {
+    return alpha;
+}
+
+const set<char>& Model::get_alphabet() const {
+    return alphabet;
 }
