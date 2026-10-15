@@ -1,19 +1,16 @@
 #include "Model.h"
 
-// Constructor
+//Constructor
 Model::Model(int k, double alpha) {
     this->k = k;
     this->alpha = alpha;
 }
 
-// Analyze the text to get frequencies of k-grams
-// and the characters that follow them.
+//Analyze text to get frequencies of k-grams and characters that follow.
 void Model::train(const string& text) {
-    // There must be at least k+1 characters to have
-    // a k-gram followed by a character.
     if (text.size() <= static_cast<size_t>(k)) {
         throw invalid_argument(
-            "Training text must contain more than k characters."
+            "Training text has to contain more than k characters." //defensive
         );
     }
 
@@ -25,18 +22,17 @@ void Model::train(const string& text) {
         transitions[kgram][next]++;
     }
 
-    // Count the final k-gram too, even though it has no
-    // following character.
+    //Consider final k-gram
     string last_kgram = text.substr(text.size() - k, k);
     frequencies[last_kgram]++;
 
-    // Build the alphabet from the training text.
+    //get alphabet of training text
     for (char letter : text) {
         alphabet.insert(letter);
     }
 }
 
-// Calculate the probability of each possible next character.
+//Get probability of possible next character.
 void Model::calcprob() {
     for (const auto& entry : frequencies) {
         const string& kgram = entry.first;
@@ -71,6 +67,8 @@ void Model::calcprob() {
         }
     }
 }
+
+//functions to get the private variables
 
 int Model::get_k() const {
     return k;

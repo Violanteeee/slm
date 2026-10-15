@@ -4,6 +4,7 @@
 #include "Model.h"
 #include <string>
 
+using namespace std;
 class TextGenerator {
     private:
         const Model& model;

@@ -3,9 +3,10 @@
 #include <vector>
 #include <stdexcept>
 
+//refer to Model
 TextGenerator::TextGenerator(const Model& model) : model(model) {
 }
-
+//chose starting kgram with std distribution
 string TextGenerator::choose_kgram() const {
     vector<string> kgrams;
     vector<double> weights;
@@ -29,11 +30,11 @@ string TextGenerator::choose_kgram() const {
     int index = dist(rng);
     return kgrams[index];
 }
-
+//text generation
 string TextGenerator::generate(int length) {
     if (length <= 0 || length < model.get_k()) {
         throw std::invalid_argument(
-            "Output text length needs to be positive and at least k."
+            "Output text length needs to be positive and at least k." //defensive
         );
     }
 
@@ -52,13 +53,13 @@ string TextGenerator::generate(int length) {
         vector<double> weights;
 
         if (it != probabilities.end()) {
-            // Known k-gram: use calculated probabilities
+            //Known k-gram: use calculated probabilities
             for (const auto& entry : it->second) {
                 characters.push_back(entry.first);
                 weights.push_back(entry.second);
             }
         } else {
-            // new k-gram: use uniform distribution
+            //new k-gram: use uniform distribution
             for (char c : model.get_alphabet()) {
                 characters.push_back(c);
                 weights.push_back(1.0);
