@@ -1,5 +1,11 @@
-# Compiled executable
+#Compiled executable
 slm
 
-# C++ object files
+#C++ object files
 *.o
+
+#macOS metadata
+.DS_Store
+
+#training texts
+*.txt
